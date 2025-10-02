@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>MSC框架数据展示示例</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #userList {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        #userList th, #userList td {
+            border: 1px solid #ddd;
+            padding: 12px;
+        }
+        #userList th {
+            background-color: #f2f2f2;
+        }
+        .loading {
+            color: #666;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>用户数据展示</h1>
+    <button onclick="fetchUserData()">获取用户列表</button>
+    <div class="loading" id="loading" style="display: none;">加载中...</div>
+    <table id="userList" style="display: none;">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>姓名</th>
+        </tr>
+        </thead>
+        <tbody id="userTableBody">
+        <!-- 数据将通过JS动态插入 -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // 异步请求后端API并展示数据
+    function fetchUserData() {
+        // 显示加载状态
+        document.getElementById("loading").style.display = "block";
+        document.getElementById("userList").style.display = "none";
+
+        // 调用后端API（对应UserController的/get/list接口）
+        fetch("/user/list")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("网络响应不正常");
+                }
+                return response.json(); // 解析JSON数据
+            })
+            .then(users => {
+                // 隐藏加载状态，显示表格
+                document.getElementById("loading").style.display = "none";
+                document.getElementById("userList").style.display = "table";
+
+                // 清空表格内容
+                const tableBody = document.getElementById("userTableBody");
+                tableBody.innerHTML = "";
+
+                // 动态插入数据
+                users.forEach(user => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                            <td>${user.id}</td>
+                            <td>${user.name}</td>
+                        `;
+                    tableBody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                // 处理错误
+                document.getElementById("loading").style.display = "none";
+                alert("获取数据失败：" + error.message);
+            });
+    }
+</script>
+</body>
+</html>
