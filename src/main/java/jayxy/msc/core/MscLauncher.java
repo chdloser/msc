@@ -8,6 +8,9 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import java.io.IOException;
 
+/**
+ * 框架启动器
+ */
 public class MscLauncher {
     private static final int DEFAULT_PORT = 8080;
     private static String scanPackage; // 要扫描的Controller包
@@ -29,7 +32,11 @@ public class MscLauncher {
         }
     }
 
-    // 简化启动（默认端口）
+    /**
+     * 简化启动（默认端口8080）
+     * @param packageToScan 扫包路径
+     */
+
     public static void start(String packageToScan) {
         start(DEFAULT_PORT, packageToScan);
     }

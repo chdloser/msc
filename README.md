@@ -13,3 +13,12 @@ MSC遵循轻量框架的核心原则：
 4. 适配单页应用：原生支持 SPA 静态资源（Vue/React 打包文件）和前端路由（history 模式）。
 
 更适合个人学习和小项目的Web框架。
+
+# 执行流程
+一个简化版的MVC：
+
+客户端请求->MscServlet->Dispatcher分发->Router路由匹配->StaticHandler静态资源查找。
+
+Dispatcher分发请求时会解析请求的参数。支持
+1. @Parma 使用Get参数绑定到方法。
+2. 当Post_Handler只有一个参数时，请求体Json转Java对象。

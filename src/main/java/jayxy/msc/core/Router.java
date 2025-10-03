@@ -8,6 +8,10 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 路由器
+ * 通过扫包寻找所有带@Api注解的请求处理类，注册其路由和方法映射
+ */
 public class Router {
     // 路由映射：键=HTTP方法+URL（如"GET_/user/list"），值=处理方法信息
     private final Map<String, Handler> routeMap = new HashMap<>();

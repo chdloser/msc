@@ -5,6 +5,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 类扫描器
+ */
 public class ClassScanner {
     // 扫描指定包下的所有类
     public static List<Class<?>> scan(String basePackage) throws Exception {

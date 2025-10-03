@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSON;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jayxy.msc.annotation.Param;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -12,8 +14,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
- * 请求分发器
+ * 请求分发器，处理所有请求
+ * 1. 提取请求路由找到对应方法。 -> Router
+ * 2. 解析请求参数，调用方法执行
+ * 3. 没有对应方法则返回静态资源 -> StaticHandler
  */
+@Slf4j
 public class Dispatcher {
     private final Router router;
     private final StaticHandler staticHandler;
@@ -44,9 +50,19 @@ public class Dispatcher {
         try {
             Method method = handler.getMethod();
             // 解析请求参数
-            Object[] args = req.getMethod().equals("POST")
-                    ? resolvePostParams(req, method.getParameters())
-                    : resolveGetParams(req, method.getParameters());
+            String reqMethod = req.getMethod();
+            Object[] args = null;
+            switch (reqMethod) {
+                case "GET":
+                    args = resolveGetParams(req, method.getParameters());
+                    break;
+                case "POST":
+                    args = resolvePostParams(req, method.getParameters());
+                    break;
+                default:
+                    log.error("unknown method: {}", reqMethod);
+                    break;
+            }
             // 调用Controller方法
             Object result = method.invoke(handler.getController(), args);
             // 返回JSON响应

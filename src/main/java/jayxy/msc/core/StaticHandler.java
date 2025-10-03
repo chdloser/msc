@@ -4,6 +4,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * 静态资源处理器
+ */
 public class StaticHandler {
     private static final String STATIC_DIR = "static"; // 静态资源根目录
 
