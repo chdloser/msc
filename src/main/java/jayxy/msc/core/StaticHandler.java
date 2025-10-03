@@ -8,7 +8,7 @@ import java.io.InputStream;
  * 静态资源处理器
  */
 public class StaticHandler {
-    private static final String STATIC_DIR = "static"; // 静态资源根目录
+    private static final String STATIC_DIR = "static/"; // 静态资源根目录
 
     public void handle(String url, HttpServletResponse resp) throws IOException {
         // 适配SPA history模式：非文件路径返回index.html

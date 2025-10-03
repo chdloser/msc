@@ -8,8 +8,15 @@ import jayxy.msc.core.MscLauncher;
  */
 public class MscApplication {
     public static void run(Class<?> mainClass, String... args) {
-        // 默认扫描mainClass所在包的子包"api"（如mainClass在com.example，则扫描com.example.api）
-        String basePackage = mainClass.getPackage().getName() + ".api";
-        MscLauncher.start(basePackage);
+        // 默认扫描mainClass所在包及子包
+        if(args.length == 0) {
+            String basePackage = mainClass.getPackage().getName();
+            MscLauncher.start(basePackage);
+        }else {
+            for(String arg : args) {
+                MscLauncher.start(arg);
+            }
+        }
+
     }
 }
