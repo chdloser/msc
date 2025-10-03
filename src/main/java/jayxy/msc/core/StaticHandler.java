@@ -18,7 +18,8 @@ public class StaticHandler {
 
         // 读取资源文件
         String resourcePath = STATIC_DIR + (url.startsWith("/") ? url : "/" + url);
-        try (InputStream in = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        try (InputStream in = contextClassLoader.getResourceAsStream(resourcePath)) {
             if (in == null) {
                 resp.sendError(404, "静态资源不存在：" + url);
                 return;
