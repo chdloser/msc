@@ -61,9 +61,9 @@
                 <version>3.3.0</version>
                 <configuration>
                     <archive>
-                        <manifest>
-                            <mainClass>jayxy.example.Application</mainClass>
-                        </manifest>
+<!--                        <manifest>-->
+<!--                            <mainClass>jayxy.example.Application</mainClass>-->
+<!--                        </manifest>-->
                     </archive>
                 </configuration>
             </plugin>
