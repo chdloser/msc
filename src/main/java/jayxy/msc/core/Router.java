@@ -2,6 +2,8 @@ package jayxy.msc.core;
 
 import jayxy.msc.annotation.Api;
 import jayxy.msc.annotation.Get;
+import jayxy.msc.annotation.Post;
+
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,13 +22,22 @@ public class Router {
                     String basePath = normalizePath(api.value()); // 处理前缀路径
                     Object controller = clazz.getDeclaredConstructor().newInstance(); // 实例化Controller
 
-                    // 遍历类中所有@Get方法
+                    // 遍历类中所有请求方法
                     for (Method method : clazz.getDeclaredMethods()) {
+                        //@Get请求
                         if (method.isAnnotationPresent(Get.class)) {
                             Get get = method.getAnnotation(Get.class);
                             String path = normalizePath(get.value()); // 处理方法路径
                             String fullPath = basePath + path; // 完整URL路径
                             String key = "GET_" + fullPath; // 路由键
+
+                            routeMap.put(key, new Handler(controller, method));
+                        }
+                        //@Post请求
+                        else if (method.isAnnotationPresent(Post.class)) {
+                            Post post = method.getAnnotation(Post.class);
+                            String fullPath = basePath + normalizePath(post.value());
+                            String key = "POST_" + fullPath;
 
                             routeMap.put(key, new Handler(controller, method));
                         }
