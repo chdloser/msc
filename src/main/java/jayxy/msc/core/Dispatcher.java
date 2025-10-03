@@ -51,18 +51,8 @@ public class Dispatcher {
             Method method = handler.getMethod();
             // 解析请求参数
             String reqMethod = req.getMethod();
-            Object[] args = null;
-            switch (reqMethod) {
-                case "GET":
-                    args = resolveGetParams(req, method.getParameters());
-                    break;
-                case "POST":
-                    args = resolvePostParams(req, method.getParameters());
-                    break;
-                default:
-                    log.error("unknown method: {}", reqMethod);
-                    break;
-            }
+            // 调用参数解析器（支持注入request/response）
+            Object[] args = resolveParams(req, resp, method.getParameters());
             // 调用Controller方法
             Object result = method.invoke(handler.getController(), args);
             // 返回JSON响应
@@ -72,48 +62,66 @@ public class Dispatcher {
             resp.sendError(500, "API处理失败：" + e.getMessage());
         }
     }
-    // 解析POST请求的JSON体参数
-    private Object[] resolvePostParams(HttpServletRequest req, Parameter[] parameters) throws IOException {
-        // 读取请求体
-        InputStream is = req.getInputStream();
-        byte[] buffer = new byte[req.getContentLength()];
-        is.read(buffer);
-        String jsonBody = new String(buffer, StandardCharsets.UTF_8);
-
-        // 如果只有一个参数，且是自定义对象，直接解析JSON
-        if (parameters.length == 1) {
-            Class<?> paramType = parameters[0].getType();
-            if (!paramType.isPrimitive() && !String.class.equals(paramType)) {
-                return new Object[]{JSON.parseObject(jsonBody, paramType)};
-            }
-        }
-
-        // 否则视为多参数（从JSON中提取字段）
+    // 通用参数解析方法
+    private Object[] resolveParams(HttpServletRequest req, HttpServletResponse resp, Parameter[] parameters){
         return Arrays.stream(parameters)
                 .map(param -> {
-                    Param paramAnno = param.getAnnotation(Param.class);
-                    String paramName = paramAnno != null ? paramAnno.value() : param.getName();
-                    // 从JSON中提取参数值（简化实现，实际可使用JSON对象获取）
-                    return JSON.parseObject(jsonBody).getObject(paramName, param.getType());
+                    try {
+                        return resolveSingleParam(req, resp, param);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                 })
                 .toArray();
     }
+    // 解析单个参数
+    private Object resolveSingleParam(HttpServletRequest req, HttpServletResponse resp, Parameter param) throws IOException {
+        Class<?> paramType = param.getType();
 
-    // 解析Get请求的@Param参数
-    private Object[] resolveGetParams(HttpServletRequest req, Parameter[] parameters) {
-        return java.util.Arrays.stream(parameters)
-                .map(param -> {
-                    Param paramAnno = param.getAnnotation(Param.class);
-                    if (paramAnno == null) {
-                        throw new RuntimeException("参数" + param.getName() + "需添加@Param注解");
-                    }
-                    String value = req.getParameter(paramAnno.value());
-                    // 简单类型转换
-                    if (param.getType() == Integer.class) {
-                        return value == null ? null : Integer.parseInt(value);
-                    }
-                    return value;
-                })
-                .toArray();
+        // 1. 注入HttpServletRequest对象
+        if (paramType == HttpServletRequest.class) {
+            return req;
+        }
+
+        // 2. 注入HttpServletResponse对象
+        if (paramType == HttpServletResponse.class) {
+            return resp;
+        }
+
+        // 3. 注入请求头（通过@Param指定头名称，如@Param("User-Agent")）
+        if (param.isAnnotationPresent(Param.class) && paramType == String.class) {
+            String paramName = param.getAnnotation(Param.class).value();
+            // 先查请求头，再查请求参数（优先头信息）
+            String headerValue = req.getHeader(paramName);
+            if (headerValue != null) {
+                return headerValue;
+            }
+        }
+
+        // 4. 处理POST请求体（JSON→对象）
+        if (req.getMethod().equals("POST") && !paramType.isPrimitive() && !String.class.equals(paramType)) {
+            String jsonBody = readJsonBody(req);
+            return JSON.parseObject(jsonBody, paramType);
+        }
+
+        // 5. 处理GET参数或POST表单参数
+        if (param.isAnnotationPresent(Param.class)) {
+            String paramName = param.getAnnotation(Param.class).value();
+            String value = req.getParameter(paramName);
+            // 基本类型转换（简化版）
+            if (paramType == Integer.class) {
+                return value == null ? null : Integer.parseInt(value);
+            }
+            return value;
+        }
+
+        throw new RuntimeException("不支持的参数类型：" + paramType.getName());
+    }
+    // 读取POST请求的JSON体
+    private String readJsonBody(HttpServletRequest req) throws IOException {
+        InputStream is = req.getInputStream();
+        byte[] buffer = new byte[req.getContentLength()];
+        is.read(buffer);
+        return new String(buffer, StandardCharsets.UTF_8);
     }
 }

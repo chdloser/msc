@@ -20,5 +20,8 @@ MSC遵循轻量框架的核心原则：
 客户端请求->MscServlet->Dispatcher分发->Router路由匹配->StaticHandler静态资源查找。
 
 Dispatcher分发请求时会解析请求的参数。支持
-1. @Parma 使用Get参数绑定到方法。
+1. @Parma 将请求参数绑定到方法。
+   1. 优先绑定请求头参数
+   2. 其次绑定Get请求参数/Post表单参数（如果Post表单要提交多个数据，请使用JSON而不是表单提交）
 2. 当Post_Handler只有一个参数时，请求体Json转Java对象。
+3. 注入HttpServletRequest和HttpServletRequest 
