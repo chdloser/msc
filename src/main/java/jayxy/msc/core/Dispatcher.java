@@ -30,19 +30,22 @@ public class Dispatcher {
     }
 
     // 处理所有请求
-    public void handle(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    public void handle(HttpServletRequest req, HttpServletResponse resp){
         String method = req.getMethod();
         String url = req.getRequestURI().replace(req.getContextPath(), "");
-
-        // 1. 优先处理API请求
-        Router.Handler handler = router.getHandler(method, url);
-        if (handler != null) {
-            handleApi(req, resp, handler);
-            return;
+        try {
+            // 1. 优先处理API请求
+            Router.Handler handler = router.getHandler(method, url);
+            if (handler != null) {
+                handleApi(req, resp, handler);
+                return;
+            }
+            // 2. 处理静态资源（适配SPA）
+            staticHandler.handle(url, resp);
+        }catch (Exception e){
+            log.error("",e);
+            throw new RuntimeException(e);
         }
-
-        // 2. 处理静态资源（适配SPA）
-        staticHandler.handle(url, resp);
     }
 
     // 处理API请求
